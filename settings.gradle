@@ -1,4 +1,5 @@
 rootProject.name = 'instagram'
 include 'resourceuploadservice'
 include 'uploadservice'
+include 'postservice'
 
