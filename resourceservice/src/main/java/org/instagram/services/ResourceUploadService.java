@@ -2,7 +2,6 @@ package org.instagram.services;
 
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
-import lombok.extern.slf4j.Slf4j;
 import org.instagram.entities.Resource;
 import org.instagram.enums.ResourceStatus;
 import org.instagram.interfaces.IResourceUploadService;
@@ -21,6 +20,7 @@ public class ResourceUploadService implements IResourceUploadService {
     private final IResourceRepository resourceRepository;
     private final Snowflake snowflake;
     private final AmazonS3 s3Client;
+
 
     @Value("${aws.s3.bucket.name}")
     private String bucketName;
@@ -50,6 +50,7 @@ public class ResourceUploadService implements IResourceUploadService {
     }
 
     private String generatePreSignedUrl(Long userId, Long resourceId) {
+        // TODO: Implement a factory pattern to talk to various cloud providers
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
         calendar.add(Calendar.MINUTE, 10);
