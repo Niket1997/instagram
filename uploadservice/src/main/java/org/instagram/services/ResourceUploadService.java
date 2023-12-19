@@ -2,6 +2,7 @@ package org.instagram.services;
 
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
+import lombok.extern.slf4j.Slf4j;
 import org.instagram.entities.Resource;
 import org.instagram.enums.ResourceStatus;
 import org.instagram.interfaces.IResourceUploadService;
