@@ -1,4 +1,4 @@
 rootProject.name = 'instagram'
-include 'postservice'
 include 'resourceservice'
+include 'postservice'
 

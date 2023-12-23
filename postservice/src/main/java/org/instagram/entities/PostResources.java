@@ -11,7 +11,7 @@ import org.hibernate.annotations.Filter;
 @Filter(name = "soft_deleted_filter", condition = "deleted_at IS NULL")
 @Table(
         indexes = {
-                @Index(name = "idx_post_resources_post_id", columnList = "post_id") // get all resources for a post
+                @Index(name = "idx_post_resources_post_id", columnList = "post_id") // get all resourceIds for a post
         }
 )
 public class PostResources extends BaseEntity {

@@ -10,8 +10,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/postservice" />
-            <option value="$PROJECT_DIR$/resourceuploadservice" />
-            <option value="$PROJECT_DIR$/uploadservice" />
+            <option value="$PROJECT_DIR$/resourceservice" />
           </set>
         </option>
       </GradleProjectSettings>
