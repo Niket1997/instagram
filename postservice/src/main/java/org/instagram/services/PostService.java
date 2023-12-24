@@ -2,7 +2,6 @@ package org.instagram.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.common.protocol.types.Field;
 import org.instagram.entities.Post;
 import org.instagram.entities.PostResource;
 import org.instagram.entities.Tag;
@@ -93,20 +92,33 @@ public class PostService implements IPostService {
 
     @Override
     public PostResponse updatePost(Long postId, UpdatePostRequest request) {
-        return null;
+        Post post = postRepository.findById(postId).orElse(null);
+        if (post == null) {
+            throw new PostNotFoundException("post with id " + postId + " not found");
+        }
+
+        if (!request.caption().isEmpty()) {
+            post.setCaption(request.caption());
+            postRepository.save(post);
+        }
+
+        List<PostResource> postResources = postResourceService.getPostResourcesByPostId(postId);
+        List<Tag> taggedUsers = tagService.getTagsByParentId(postId, ParentType.POST);
+
+        return new PostResponse(postId, post.getUserId(), post.getCaption(), postResources, taggedUsers);
     }
 
     @Override
-    public PostResponse getPostById(Long id) {
-        Post post = postRepository.findById(id).orElse(null);
+    public PostResponse getPostById(Long postId) {
+        Post post = postRepository.findById(postId).orElse(null);
         if (post == null) {
-            throw new PostNotFoundException("post with id " + id + " not found");
+            throw new PostNotFoundException("post with id " + postId + " not found");
         }
 
-        List<PostResource> postResources = postResourceService.getPostResourcesByPostId(id);
-        List<Tag> taggedUsers = tagService.getTagsByParentId(id, ParentType.POST);
+        List<PostResource> postResources = postResourceService.getPostResourcesByPostId(postId);
+        List<Tag> taggedUsers = tagService.getTagsByParentId(postId, ParentType.POST);
 
-        return new PostResponse(id, post.getUserId(), post.getCaption(), postResources, taggedUsers);
+        return new PostResponse(postId, post.getUserId(), post.getCaption(), postResources, taggedUsers);
     }
 
     @Override
@@ -127,6 +139,6 @@ public class PostService implements IPostService {
 
     @Override
     public void deletePost(Long id) {
-
+        postRepository.deleteById(id);
     }
 }
