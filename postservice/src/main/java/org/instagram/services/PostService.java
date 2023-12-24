@@ -21,11 +21,14 @@ import org.instagram.records.post.UpdatePostRequest;
 import org.instagram.records.postresource.CreatePostResourcesRequest;
 import org.instagram.records.tag.CreateTagsRequest;
 import org.instagram.repositories.IPostRepository;
+import org.instagram.utils.CloudfrontSignedUrlGenerator;
 import org.instagram.utils.Snowflake;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,6 +42,7 @@ public class PostService implements IPostService {
     private final ITagService tagService;
     private final KafkaTemplate<String, PostResponse> postResponseKafkaTemplate;
     private final Snowflake snowflake;
+    private final CloudfrontSignedUrlGenerator cloudfrontSignedUrlGenerator;
 
     @Value("${spring.kafka.topics.on-post-published}")
     private String onPostPublishedKafkaTopic;
@@ -109,7 +113,7 @@ public class PostService implements IPostService {
     }
 
     @Override
-    public PostResponse getPostById(Long postId) {
+    public PostResponse getPostById(Long postId) throws IOException, InvalidKeySpecException {
         Post post = postRepository.findById(postId).orElse(null);
         if (post == null) {
             throw new PostNotFoundException("post with id " + postId + " not found");
@@ -117,6 +121,8 @@ public class PostService implements IPostService {
 
         List<PostResource> postResources = postResourceService.getPostResourcesByPostId(postId);
         List<Tag> taggedUsers = tagService.getTagsByParentId(postId, ParentType.POST);
+
+        cloudfrontSignedUrlGenerator.getSignedUrl("123/1188105233620344832");
 
         return new PostResponse(postId, post.getUserId(), post.getCaption(), postResources, taggedUsers);
     }

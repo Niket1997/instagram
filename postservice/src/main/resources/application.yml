@@ -3,6 +3,11 @@ server:
   error:
     include-message: always
 
+aws:
+  cloudfront:
+    domain: d2q84pmxp17mi8.cloudfront.net
+    key-pair-id: KUFU7G0J5CYFK # ${AWS_CLOUDFRONT_KEY_PAIR_ID}
+
 external:
   resource-service:
     base-url: "http://localhost:8081/"

@@ -4,6 +4,8 @@ import org.instagram.records.post.CreatePostRequest;
 import org.instagram.records.post.PostResponse;
 import org.instagram.records.post.UpdatePostRequest;
 
+import java.io.IOException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 
 public interface IPostService {
@@ -11,7 +13,7 @@ public interface IPostService {
 
     PostResponse updatePost(Long postId, UpdatePostRequest request);
 
-    PostResponse getPostById(Long id);
+    PostResponse getPostById(Long id) throws IOException, InvalidKeySpecException;
 
     List<PostResponse> getPostsByUserId(Long userId);
 
