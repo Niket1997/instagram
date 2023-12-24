@@ -14,7 +14,7 @@ import org.hibernate.annotations.Filter;
                 @Index(name = "idx_post_resources_post_id", columnList = "post_id") // get all resourceIds for a post
         }
 )
-public class PostResources extends BaseEntity {
+public class PostResource extends BaseEntity {
     @Id
     private Long id;
 
