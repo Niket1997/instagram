@@ -2,6 +2,7 @@ package org.instagram.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.common.protocol.types.Field;
 import org.instagram.entities.Post;
 import org.instagram.entities.PostResource;
 import org.instagram.entities.Tag;
@@ -19,7 +20,10 @@ import org.instagram.records.post.PostResponse;
 import org.instagram.records.post.UpdatePostRequest;
 import org.instagram.records.postresource.CreatePostResourcesRequest;
 import org.instagram.records.tag.CreateTagsRequest;
+import org.instagram.repositories.IPostRepository;
 import org.instagram.utils.Snowflake;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,9 +34,13 @@ import java.util.List;
 public class PostService implements IPostService {
     private final ResourceService resourceService;
     private final IPostResourceService postResourceService;
+    private final IPostRepository postRepository;
     private final ITagService tagService;
-
+    private final KafkaTemplate<String, PostResponse> postResponseKafkaTemplate;
     private final Snowflake snowflake;
+
+    @Value("${spring.kafka.topics.on-post-published}")
+    private String onPostPublishedKafkaTopic;
 
     @Override
     public PostResponse createPost(CreatePostRequest request) {
@@ -71,12 +79,14 @@ public class PostService implements IPostService {
         post.setId(postId);
         post.setUserId(request.userId());
         post.setCaption(request.caption());
-
+        postRepository.save(post);
+        log.info("post with post id " + postId + " created successfully");
 
         // 5. publish a message to ON_POST_PUBLISHED Kafka topic
-
-        log.info("post with post id " + postId + " created successfully");
-        return new PostResponse(postId, request.userId(), request.caption(), postResources, tags);
+        PostResponse postResponse = new PostResponse(postId, request.userId(), request.caption(), postResources, tags);
+        postResponseKafkaTemplate.send(onPostPublishedKafkaTopic, postResponse);
+        log.info("PostResponse message sent to kafka");
+        return postResponse;
     }
 
     @Override
