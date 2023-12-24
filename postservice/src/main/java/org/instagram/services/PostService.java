@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -110,7 +111,18 @@ public class PostService implements IPostService {
 
     @Override
     public List<PostResponse> getPostsByUserId(Long userId) {
-        return null;
+        List<Post> posts = postRepository.findAllByUserIdOrderByCreatedAtDesc(userId);
+        List<PostResponse> userPostResponses = new ArrayList<>();
+
+        posts.forEach(post -> {
+            List<PostResource> postResources = postResourceService.getPostResourcesByPostId(post.getId());
+            List<Tag> taggedUsers = tagService.getTagsByParentId(post.getId(), ParentType.POST);
+            PostResponse postResponse = new PostResponse(post.getId(), post.getUserId(), post.getCaption(), postResources, taggedUsers);
+            userPostResponses.add(postResponse);
+        });
+
+        log.info("posts with user id " + userId + " retrieved successfully");
+        return userPostResponses;
     }
 
     @Override
