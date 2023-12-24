@@ -33,4 +33,9 @@ public class PostResourceService implements IPostResourceService {
         }
         return postResources;
     }
+
+    @Override
+    public List<PostResource> getPostResourcesByPostId(Long postId) {
+        return postResourceRepository.findAllByPostIdOrderBySequenceNumber(postId);
+    }
 }

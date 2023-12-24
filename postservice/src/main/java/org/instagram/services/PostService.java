@@ -9,6 +9,7 @@ import org.instagram.entities.Tag;
 import org.instagram.enums.ParentType;
 import org.instagram.exceptions.external.ResourceServiceException;
 import org.instagram.exceptions.external.ResourceUploadFailedException;
+import org.instagram.exceptions.post.PostNotFoundException;
 import org.instagram.external.ResourceService;
 import org.instagram.interfaces.post.IPostService;
 import org.instagram.interfaces.postresource.IPostResourceService;
@@ -90,12 +91,25 @@ public class PostService implements IPostService {
     }
 
     @Override
-    public PostResponse updatePost(UpdatePostRequest request) {
+    public PostResponse updatePost(Long postId, UpdatePostRequest request) {
         return null;
     }
 
     @Override
     public PostResponse getPostById(Long id) {
+        Post post = postRepository.findById(id).orElse(null);
+        if (post == null) {
+            throw new PostNotFoundException("post with id " + id + " not found");
+        }
+
+        List<PostResource> postResources = postResourceService.getPostResourcesByPostId(id);
+        List<Tag> taggedUsers = tagService.getTagsByParentId(id, ParentType.POST);
+
+        return new PostResponse(id, post.getUserId(), post.getCaption(), postResources, taggedUsers);
+    }
+
+    @Override
+    public List<PostResponse> getPostsByUserId(Long userId) {
         return null;
     }
 

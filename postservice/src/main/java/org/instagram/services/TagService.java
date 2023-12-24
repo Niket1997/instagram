@@ -3,6 +3,7 @@ package org.instagram.services;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.instagram.entities.Tag;
+import org.instagram.enums.ParentType;
 import org.instagram.interfaces.tag.ITagService;
 import org.instagram.records.tag.CreateTagsRequest;
 import org.instagram.repositories.ITagRepository;
@@ -31,5 +32,10 @@ public class TagService implements ITagService {
             tagRepository.save(tag);
         }
         return tags;
+    }
+
+    @Override
+    public List<Tag> getTagsByParentId(Long parentId, ParentType parentType) {
+        return tagRepository.findAllByParentIdAndParentType(parentId, parentType);
     }
 }

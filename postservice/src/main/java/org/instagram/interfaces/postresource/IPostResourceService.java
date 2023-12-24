@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface IPostResourceService {
     List<PostResource> createPostResources(CreatePostResourcesRequest request);
+
+    List<PostResource> getPostResourcesByPostId(Long postId);
 }
