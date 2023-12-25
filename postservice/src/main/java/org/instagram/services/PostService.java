@@ -19,6 +19,7 @@ import org.instagram.records.post.CreatePostRequest;
 import org.instagram.records.post.PostResponse;
 import org.instagram.records.post.UpdatePostRequest;
 import org.instagram.records.postresource.CreatePostResourcesRequest;
+import org.instagram.records.postresource.PostResourceResponse;
 import org.instagram.records.tag.CreateTagsRequest;
 import org.instagram.repositories.IPostRepository;
 import org.instagram.utils.CloudfrontSignedUrlGenerator;
@@ -28,6 +29,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +44,6 @@ public class PostService implements IPostService {
     private final ITagService tagService;
     private final KafkaTemplate<String, PostResponse> postResponseKafkaTemplate;
     private final Snowflake snowflake;
-    private final CloudfrontSignedUrlGenerator cloudfrontSignedUrlGenerator;
 
     @Value("${spring.kafka.topics.on-post-published}")
     private String onPostPublishedKafkaTopic;
@@ -73,7 +74,7 @@ public class PostService implements IPostService {
 
         // 2. create & save post resource entities
         CreatePostResourcesRequest createPostResourcesRequest = new CreatePostResourcesRequest(request.userId(), postId, request.resourceIds());
-        List<PostResource> postResources = postResourceService.createPostResources(createPostResourcesRequest);
+        List<PostResourceResponse> postResources = postResourceService.createPostResources(createPostResourcesRequest);
 
         // 3. add entries in tags table
         CreateTagsRequest createTagsRequest = new CreateTagsRequest(postId, ParentType.POST, request.taggedUserIds());
@@ -106,23 +107,21 @@ public class PostService implements IPostService {
             postRepository.save(post);
         }
 
-        List<PostResource> postResources = postResourceService.getPostResourcesByPostId(postId);
+        List<PostResourceResponse> postResources = postResourceService.getPostResourcesByPostId(postId);
         List<Tag> taggedUsers = tagService.getTagsByParentId(postId, ParentType.POST);
 
         return new PostResponse(postId, post.getUserId(), post.getCaption(), postResources, taggedUsers);
     }
 
     @Override
-    public PostResponse getPostById(Long postId) throws IOException, InvalidKeySpecException {
+    public PostResponse getPostById(Long postId) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
         Post post = postRepository.findById(postId).orElse(null);
         if (post == null) {
             throw new PostNotFoundException("post with id " + postId + " not found");
         }
 
-        List<PostResource> postResources = postResourceService.getPostResourcesByPostId(postId);
+        List<PostResourceResponse> postResources = postResourceService.getPostResourcesByPostId(postId);
         List<Tag> taggedUsers = tagService.getTagsByParentId(postId, ParentType.POST);
-
-        cloudfrontSignedUrlGenerator.getSignedUrl("123/1188105233620344832");
 
         return new PostResponse(postId, post.getUserId(), post.getCaption(), postResources, taggedUsers);
     }
@@ -133,7 +132,7 @@ public class PostService implements IPostService {
         List<PostResponse> userPostResponses = new ArrayList<>();
 
         posts.forEach(post -> {
-            List<PostResource> postResources = postResourceService.getPostResourcesByPostId(post.getId());
+            List<PostResourceResponse> postResources = postResourceService.getPostResourcesByPostId(post.getId());
             List<Tag> taggedUsers = tagService.getTagsByParentId(post.getId(), ParentType.POST);
             PostResponse postResponse = new PostResponse(post.getId(), post.getUserId(), post.getCaption(), postResources, taggedUsers);
             userPostResponses.add(postResponse);

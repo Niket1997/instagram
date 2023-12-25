@@ -1,16 +1,17 @@
 package org.instagram.utils;
 
 import com.amazonaws.services.cloudfront.CloudFrontUrlSigner;
-import com.amazonaws.services.cloudfront.util.SignerUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.Security;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Date;
 
 
@@ -23,18 +24,19 @@ public class CloudfrontSignedUrlGenerator {
     @Value("${aws.cloudfront.key-pair-id}")
     private String keyPairId;
 
-    private String privateKeyFilePath = "/private_key.der";
+    @Value("${aws.cloudfront.private-key}")
+    private String privateKey;
 
-    public String getSignedUrl(String key) throws IOException, InvalidKeySpecException {
+    public String generateSignedUrlForResource(String key) throws InvalidKeySpecException, NoSuchAlgorithmException {
         Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
-        URL filePathURL = CloudfrontSignedUrlGenerator.class.getResource(privateKeyFilePath);
-        if (filePathURL == null) {
-            throw new IOException("File not found");
-        }
-        File file = new File(filePathURL.getFile());
-        Date expirationDate = new Date(new Date().getTime() + 1000 * 60 * 60); // 1 hour expiration
-        String newSignedUrl = CloudFrontUrlSigner.getSignedURLWithCannedPolicy(SignerUtils.Protocol.https, cloudFrontDomain, file, key, keyPairId, expirationDate);
+        byte[] privateKeyByteArray = Base64.decodeBase64(privateKey);
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privateKeyByteArray);
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
 
+        PrivateKey myPrivateKey = keyFactory.generatePrivate(keySpec);
+        Date expirationDate = new Date(new Date().getTime() + 1000 * 60 * 10); // 10 minutes validity
+        String resourceUrl = "https://" + cloudFrontDomain + "/" + key;
+        String newSignedUrl = CloudFrontUrlSigner.getSignedURLWithCannedPolicy(resourceUrl, keyPairId, myPrivateKey, expirationDate);
         log.info("URL is " + newSignedUrl);
         return newSignedUrl;
     }

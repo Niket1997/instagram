@@ -6,7 +6,8 @@ server:
 aws:
   cloudfront:
     domain: d2q84pmxp17mi8.cloudfront.net
-    key-pair-id: KUFU7G0J5CYFK # ${AWS_CLOUDFRONT_KEY_PAIR_ID}
+    key-pair-id: ${AWS_CLOUDFRONT_KEY_PAIR_ID}
+    private-key: ${AWS_CLOUDFRONT_PRIVATE_KEY}
 
 external:
   resource-service:
