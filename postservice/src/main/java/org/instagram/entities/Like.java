@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.Filter;
+import org.instagram.enums.ParentType;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -26,5 +27,5 @@ public class Like extends BaseEntity {
     private Long parentId;
 
     @Column(name = "parent_type")
-    private Long parentType;
+    private ParentType parentType;
 }

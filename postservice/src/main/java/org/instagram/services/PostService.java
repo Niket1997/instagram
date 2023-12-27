@@ -2,14 +2,15 @@ package org.instagram.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.instagram.entities.Activity;
 import org.instagram.entities.Post;
-import org.instagram.entities.PostResource;
 import org.instagram.entities.Tag;
 import org.instagram.enums.ParentType;
 import org.instagram.exceptions.external.ResourceServiceException;
 import org.instagram.exceptions.external.ResourceUploadFailedException;
 import org.instagram.exceptions.post.PostNotFoundException;
 import org.instagram.external.ResourceService;
+import org.instagram.interfaces.activity.IActivityService;
 import org.instagram.interfaces.post.IPostService;
 import org.instagram.interfaces.postresource.IPostResourceService;
 import org.instagram.interfaces.tag.ITagService;
@@ -22,15 +23,12 @@ import org.instagram.records.postresource.CreatePostResourcesRequest;
 import org.instagram.records.postresource.PostResourceResponse;
 import org.instagram.records.tag.CreateTagsRequest;
 import org.instagram.repositories.IPostRepository;
-import org.instagram.utils.CloudfrontSignedUrlGenerator;
 import org.instagram.utils.Snowflake;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,6 +40,7 @@ public class PostService implements IPostService {
     private final IPostResourceService postResourceService;
     private final IPostRepository postRepository;
     private final ITagService tagService;
+    private final IActivityService activityService;
     private final KafkaTemplate<String, PostResponse> postResponseKafkaTemplate;
     private final Snowflake snowflake;
 
@@ -50,13 +49,6 @@ public class PostService implements IPostService {
 
     @Override
     public PostResponse createPost(CreatePostRequest request) {
-        /*
-         * 1. validate if resourceIds exist by calling resource service
-         * 2. create & save post resource entities
-         * 3. add entries in tags table
-         * 4. create post
-         * 5. publish a message to ON_POST_PUBLISHED Kafka topic
-         * */
         // 1. validate if resourceIds exist by calling resource service
         ValidateAndUpdateResourcesResponse resourceServiceResponse;
         try {
@@ -88,8 +80,11 @@ public class PostService implements IPostService {
         postRepository.save(post);
         log.info("post with post id " + postId + " created successfully");
 
-        // 5. publish a message to ON_POST_PUBLISHED Kafka topic
-        PostResponse postResponse = new PostResponse(postId, request.userId(), request.caption(), postResources, tags);
+        // 5. create activity for the post
+        Activity activity = activityService.createActivity(postId);
+
+        // 6. publish a message to ON_POST_PUBLISHED Kafka topic
+        PostResponse postResponse = new PostResponse(postId, request.userId(), request.caption(), postResources, tags, activity.getNumberOfLikes(), activity.getNumberOfComments(), post.getCreatedAt(), post.getUpdatedAt());
         postResponseKafkaTemplate.send(onPostPublishedKafkaTopic, postResponse);
         log.info("PostResponse message sent to kafka");
         return postResponse;
@@ -107,23 +102,17 @@ public class PostService implements IPostService {
             postRepository.save(post);
         }
 
-        List<PostResourceResponse> postResources = postResourceService.getPostResourcesByPostId(postId);
-        List<Tag> taggedUsers = tagService.getTagsByParentId(postId, ParentType.POST);
-
-        return new PostResponse(postId, post.getUserId(), post.getCaption(), postResources, taggedUsers);
+        return getPostResponse(post);
     }
 
     @Override
-    public PostResponse getPostById(Long postId) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
+    public PostResponse getPostById(Long postId) {
         Post post = postRepository.findById(postId).orElse(null);
         if (post == null) {
             throw new PostNotFoundException("post with id " + postId + " not found");
         }
 
-        List<PostResourceResponse> postResources = postResourceService.getPostResourcesByPostId(postId);
-        List<Tag> taggedUsers = tagService.getTagsByParentId(postId, ParentType.POST);
-
-        return new PostResponse(postId, post.getUserId(), post.getCaption(), postResources, taggedUsers);
+        return getPostResponse(post);
     }
 
     @Override
@@ -132,10 +121,7 @@ public class PostService implements IPostService {
         List<PostResponse> userPostResponses = new ArrayList<>();
 
         posts.forEach(post -> {
-            List<PostResourceResponse> postResources = postResourceService.getPostResourcesByPostId(post.getId());
-            List<Tag> taggedUsers = tagService.getTagsByParentId(post.getId(), ParentType.POST);
-            PostResponse postResponse = new PostResponse(post.getId(), post.getUserId(), post.getCaption(), postResources, taggedUsers);
-            userPostResponses.add(postResponse);
+            userPostResponses.add(getPostResponse(post));
         });
 
         log.info("posts with user id " + userId + " retrieved successfully");
@@ -145,5 +131,15 @@ public class PostService implements IPostService {
     @Override
     public void deletePost(Long id) {
         postRepository.deleteById(id);
+    }
+
+    @NotNull
+    private PostResponse getPostResponse(Post post) {
+        List<PostResourceResponse> postResources = postResourceService.getPostResourcesByPostId(post.getId());
+        List<Tag> taggedUsers = tagService.getTagsByParentId(post.getId(), ParentType.POST);
+
+        Activity activity = activityService.getActivity(post.getId());
+
+        return new PostResponse(post.getId(), post.getUserId(), post.getCaption(), postResources, taggedUsers, activity.getNumberOfLikes(), activity.getNumberOfComments(), post.getCreatedAt(), post.getUpdatedAt());
     }
 }

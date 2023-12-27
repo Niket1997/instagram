@@ -12,9 +12,17 @@ import org.hibernate.annotations.Filter;
 @Filter(name = "soft_deleted_filter", condition = "deleted_at IS NULL")
 public class Activity extends BaseEntity {
     @Id
-    private Long parentId; // get all likes & comments on a post/comment
+    private Long parentId; // get all likes & comments on a post/comment, this id will always be unique
 
-    private Long likes;
+    private Long numLikes;
 
-    private Long comments;
+    private Long numComments;
+
+    public Long getNumberOfLikes() {
+        return this.getNumLikes() == null ? 0L : this.getNumLikes();
+    }
+
+    public Long getNumberOfComments() {
+        return this.getNumComments() == null ? 0L : this.getNumComments();
+    }
 }

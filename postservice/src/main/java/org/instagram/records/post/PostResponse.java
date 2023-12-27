@@ -6,5 +6,5 @@ import org.instagram.records.postresource.PostResourceResponse;
 import java.util.List;
 
 public record PostResponse(Long postId, Long userId, String caption, List<PostResourceResponse> resources,
-                           List<Tag> taggedUsers) {
+                           List<Tag> taggedUsers, Long numLikes, Long numComments, Long createdAt, Long updatedAt) {
 }
