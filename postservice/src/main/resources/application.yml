@@ -1,0 +1,38 @@
+server:
+  port: 8082
+  error:
+    include-message: always
+
+aws:
+  cloudfront:
+    domain: d2q84pmxp17mi8.cloudfront.net
+    key-pair-id: ${AWS_CLOUDFRONT_KEY_PAIR_ID}
+    private-key: ${AWS_CLOUDFRONT_PRIVATE_KEY}
+
+external:
+  resource-service:
+    base-url: "http://localhost:8081/"
+
+spring:
+  # Database Configuration
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+  datasource:
+    url: jdbc:mysql://localhost:3308/posts
+    username: root
+    password: ${PERSONAL_PROJECT_LOCAL_MYSQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  # Kafka
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer-group: post-service
+    topics:
+      on-post-published: on-post-published
+
+logging:
+  level:
+    root: info

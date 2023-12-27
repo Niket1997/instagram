@@ -1,9 +1,9 @@
 version: "3.8"
-name: mysql
+name: instagram
 
 services:
-  image-upload-service-db:
-    container_name: db
+  upload-service-db:
+    container_name: resourcesDb
     image: mysql:latest
     restart: always
     environment:
@@ -11,3 +11,51 @@ services:
       - MYSQL_ROOT_PASSWORD=${PERSONAL_PROJECT_LOCAL_MYSQL_PASSWORD}
     ports:
       - '3307:3306'
+  post-service-db:
+    container_name: postsDb
+    image: mysql:latest
+    restart: always
+    environment:
+      - MYSQL_DATABASE=posts
+      - MYSQL_ROOT_PASSWORD=${PERSONAL_PROJECT_LOCAL_MYSQL_PASSWORD}
+    ports:
+      - '3308:3306'
+
+  # Zookeeper
+  # https://www.conduktor.io/kafka/how-to-install-apache-kafka-on-mac/
+  zoo-keeper-docker:
+    image: confluentinc/cp-zookeeper:7.3.2
+    hostname: zoo-keeper-docker
+    container_name: zoo-keeper-docker
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_SERVERS: zoo-keeper-docker:2888:3888
+
+  # Kafka
+  kafka-docker:
+    image: confluentinc/cp-kafka:7.3.2
+    hostname: kafka-docker
+    container_name: kafka-docker
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+      - "9999:9999"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-docker:19092,EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9092,DOCKER://host.docker.internal:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,DOCKER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_ZOOKEEPER_CONNECT: "zoo-keeper-docker:2181"
+      KAFKA_BROKER_ID: 1
+      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_JMX_PORT: 9999
+      KAFKA_JMX_HOSTNAME: ${DOCKER_HOST_IP:-127.0.0.1}
+      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.authorizer.AclAuthorizer
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
+    depends_on:
+      - zoo-keeper-docker
