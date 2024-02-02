@@ -18,8 +18,8 @@ spring:
 aws:
   access:
     key:
-      id: { $AWS_ACCESS_KEY_ID }
-      secret: { $AWS_ACCESS_KEY_SECRET }
+      id: ${PERSONAL_AWS_ACCESS_KEY_ID}
+      secret: ${PERSONAL_AWS_ACCESS_KEY_SECRET}
   s3:
     region:
       name: "us-east-1"
