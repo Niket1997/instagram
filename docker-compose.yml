@@ -20,6 +20,15 @@ services:
       - MYSQL_ROOT_PASSWORD=${PERSONAL_PROJECT_LOCAL_MYSQL_PASSWORD}
     ports:
       - '3308:3306'
+  user-affinity-service-db:
+    container_name: userAffinitiesDb
+    image: mysql:latest
+    restart: always
+    environment:
+      - MYSQL_DATABASE=userAffinities
+      - MYSQL_ROOT_PASSWORD=${PERSONAL_PROJECT_LOCAL_MYSQL_PASSWORD}
+    ports:
+      - '3307:3306'
 
   # Zookeeper
   # https://www.conduktor.io/kafka/how-to-install-apache-kafka-on-mac/

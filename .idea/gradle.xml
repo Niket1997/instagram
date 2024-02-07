@@ -11,6 +11,7 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/postservice" />
             <option value="$PROJECT_DIR$/resourceservice" />
+            <option value="$PROJECT_DIR$/useraffinityservice" />
           </set>
         </option>
       </GradleProjectSettings>
