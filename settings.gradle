@@ -1,4 +1,5 @@
 rootProject.name = 'instagram'
 include 'resourceservice'
 include 'postservice'
+include 'useraffinityservice'
 
