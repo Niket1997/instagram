@@ -10,7 +10,7 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
   datasource:
-    url: jdbc:mysql://localhost:3309/resources
+    url: jdbc:mysql://localhost:3307/userAffinities
     username: root
     password: ${PERSONAL_PROJECT_LOCAL_MYSQL_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
