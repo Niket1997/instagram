@@ -10,7 +10,7 @@ services:
       - MYSQL_DATABASE=resources
       - MYSQL_ROOT_PASSWORD=${PERSONAL_PROJECT_LOCAL_MYSQL_PASSWORD}
     ports:
-      - '3307:3306'
+      - '3309:3306'
   post-service-db:
     container_name: postsDb
     image: mysql:latest

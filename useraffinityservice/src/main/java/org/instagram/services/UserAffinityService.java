@@ -20,12 +20,25 @@ public class UserAffinityService implements IUserAffinityService {
 
     @Override
     public UserAffinity createUserAffinity(CreateUserAffinityRequest request) {
-        UserAffinity userAffinity = new UserAffinity();
-        userAffinity.setSource(request.sourceUserId());
-        userAffinity.setDestination(request.destinationUserId());
-        userAffinity.setPosition(System.currentTimeMillis());
-        userAffinity.setState(request.state());
-        return userAffinityRepository.save(userAffinity);
+        UserAffinity userAffinityOld = userAffinityRepository.findBySourceAndDestinationAndState(request.sourceUserId(), request.destinationUserId(), request.state());
+        UserAffinity userAffinity;
+        if (userAffinityOld == null) {
+            userAffinity = new UserAffinity();
+            userAffinity.setSource(request.sourceUserId());
+            userAffinity.setDestination(request.destinationUserId());
+            userAffinity.setPosition(System.currentTimeMillis());
+            userAffinity.setState(request.state());
+            return userAffinityRepository.save(userAffinity);
+        }
+
+        if (userAffinityOld.getDeletedAt() == null) {
+            throw new UserAffinityNotFoundException("user affinity not found for sourceUserId: " + request.sourceUserId() + " destinationUserId: " + request.destinationUserId() + " & state: " + request.state());
+        }
+
+        // Update Affinity for previously connected user & then later unconnected
+        userAffinityOld.markUpdated();
+        userAffinityOld.setDeletedAt(null);
+        return userAffinityRepository.save(userAffinityOld);
     }
 
     @Override
