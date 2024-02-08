@@ -8,7 +8,7 @@ import org.instagram.enums.AffinityState;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-@Entity(name = "resources")
+@Entity(name = "user_affinities")
 @Filter(name = "soft_deleted_filter", condition = "deleted_at IS NULL")
 @IdClass(UserAffinityCompositePrimaryKey.class)
 @Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"source", "destination", "state"})})

@@ -30,8 +30,7 @@ public class UserAffinityService implements IUserAffinityService {
 
     @Override
     public List<UserAffinity> getUserAffinityByState(Long userId, AffinityState state) {
-        List<UserAffinity> userAffinityList = userAffinityRepository.findAllBySourceAndStateOrderByPositionDesc(userId, state);
-        return userAffinityList.stream().filter(it -> it.getDeletedAt() == null).toList();
+        return userAffinityRepository.findAllBySourceAndStateOrderByPositionDesc(userId, state);
     }
 
     @Override
