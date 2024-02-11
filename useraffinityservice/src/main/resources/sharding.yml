@@ -1,0 +1,31 @@
+dataSources:
+  ds0:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: com.mysql.jdbc.Driver
+    jdbcUrl: jdbc:mysql://localhost:3304/userAffinities?serverTimezone=UTC&useSSL=false&useUnicode=true&characterEncoding=UTF-8
+    username: root
+    password: ${PERSONAL_PROJECT_LOCAL_MYSQL_PASSWORD}
+  ds1:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: com.mysql.jdbc.Driver
+    jdbcUrl: jdbc:mysql://localhost:3305/userAffinities?serverTimezone=UTC&useSSL=false&useUnicode=true&characterEncoding=UTF-8
+    username: root
+    password: ${PERSONAL_PROJECT_LOCAL_MYSQL_PASSWORD}
+rules:
+  - !SHARDING
+    tables:
+      user_affinities:
+        actualDataNodes: ds${0..1}.user_affinities
+    defaultDatabaseStrategy:
+      standard:
+        shardingColumn: source
+        shardingAlgorithmName: database_inline
+    defaultTableStrategy:
+      none:
+    shardingAlgorithms:
+      database_inline:
+        type: INLINE
+        props:
+          algorithm-expression: ds${source % 2}
+props:
+  sql-show: false
